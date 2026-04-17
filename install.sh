@@ -39,11 +39,37 @@ if [ "$EUID" -eq 0 ]; then
     exit 1
 fi
 
-# Check if we're in the correct directory
+# Auto-detect and navigate to project directory
 if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
-    print_error "Please run this script from the Virtual Trackpad root directory"
+    print_status "Not in project directory, searching for Virtual Trackpad..."
+    
+    # Check if we're in the cloned repo directory
+    if [ -d "Virtual_Trackpad_for_KDE_Plasma" ]; then
+        print_status "Found Virtual Trackpad directory, navigating..."
+        cd Virtual_Trackpad_for_KDE_Plasma
+    # Check if we're one level up from the project
+    elif [ -f "Virtual_Trackpad_for_KDE_Plasma/CMakeLists.txt" ]; then
+        print_status "Found Virtual Trackpad directory, navigating..."
+        cd Virtual_Trackpad_for_KDE_Plasma
+    # Check if we're in a subdirectory of the project
+    elif [ -f "../CMakeLists.txt" ] && [ -d "../working_build" ]; then
+        print_status "Found parent Virtual Trackpad directory, navigating..."
+        cd ..
+    else
+        print_error "Could not find Virtual Trackpad project directory"
+        print_error "Please run this script from the Virtual Trackpad directory"
+        exit 1
+    fi
+fi
+
+# Verify we're now in the correct directory
+if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
+    print_error "Failed to locate Virtual Trackpad project files"
+    print_error "Please run this script from the Virtual Trackpad directory"
     exit 1
 fi
+
+print_status "Successfully located Virtual Trackpad project directory"
 
 print_step "Step 1: Checking system requirements"
 
@@ -161,11 +187,12 @@ print_step "Step 6: Creating desktop entry"
 
 # Create a desktop entry for easy launching
 DESKTOP_FILE="$HOME/.local/share/applications/virtual-trackpad.desktop"
+PROJECT_DIR=$(pwd)
 cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Name=Virtual Trackpad
 Comment=A KDE Plasma virtual trackpad widget with real cursor control on Wayland
-Exec=$(pwd)/working_build/VirtualTrackpadApp
+Exec=$PROJECT_DIR/working_build/VirtualTrackpadApp
 Icon=input-touchpad
 Terminal=false
 Type=Application
