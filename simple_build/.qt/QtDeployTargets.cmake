@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_VirtualTrackpad_FILE /home/SkylarStone/Documents/Projects/Virtual_Trackpat/CascadeProjects/windsurf-project/simple_build/VirtualTrackpad)
+set(__QT_DEPLOY_TARGET_VirtualTrackpad_TYPE EXECUTABLE)
