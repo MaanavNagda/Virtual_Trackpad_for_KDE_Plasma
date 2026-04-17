@@ -257,28 +257,38 @@ print_step "Step 7: Creating uninstall script"
 cat > remove_virtual_trackpad.sh << 'EOF'
 #!/bin/bash
 
-# Virtual Trackpad Removal Script
-
-RULE_ID="virtual-trackpad-keep-above"
-
-echo "Removing Virtual Trackpad..."
-
-# Remove the rule group from kwinrulesrc
-kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key description --delete
-kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key desktopfile --delete
-kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key desktopfilerule --delete
-kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key above --delete
-kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key aboverule --delete
-kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key focusstealingprevention --delete
-kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key focusstealingpreventionrule --delete
-
-# Reload KWin configuration
-qdbus6 org.kde.KWin /KWin reconfigure
+echo "Virtual Trackpad Uninstallation"
+echo "=============================="
 
 # Remove desktop entry
-rm -f "$HOME/.local/share/applications/virtual-trackpad.desktop"
+echo "Removing desktop entry..."
+if [ -f "$HOME/.local/share/applications/virtual-trackpad.desktop" ]; then
+    rm "$HOME/.local/share/applications/virtual-trackpad.desktop"
+    echo "Desktop entry removed."
+fi
 
-echo "Virtual Trackpad removed successfully."
+# Remove KWin rules
+echo "Removing KWin rules..."
+if [ -f "$HOME/.config/kwinrulesrc" ]; then
+    kwriteconfig6 --file kwinrulesrc --group "virtual-trackpad-keep-above" --key delete true
+    qdbus6 org.kde.KWin /KWin reconfigure
+    echo "KWin rules removed."
+fi
+
+# Get the current directory to delete it
+PROJECT_DIR=$(pwd)
+cd ..
+
+# Remove the entire project directory
+echo "Removing project directory..."
+if [ -d "$PROJECT_DIR" ]; then
+    rm -rf "$PROJECT_DIR"
+    echo "Project directory removed: $PROJECT_DIR"
+fi
+
+echo ""
+echo "Virtual Trackpad has been completely uninstalled."
+echo "All files and folders have been removed."
 EOF
 
 chmod +x remove_virtual_trackpad.sh
