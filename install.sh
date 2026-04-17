@@ -60,16 +60,18 @@ if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
         print_error "Please run this script from the Virtual Trackpad directory"
         exit 1
     fi
+    
+    # Verify we're now in the correct directory
+    if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
+        print_error "Failed to locate Virtual Trackpad project files"
+        print_error "Please run this script from the Virtual Trackpad directory"
+        exit 1
+    fi
+    
+    print_status "Successfully located Virtual Trackpad project directory"
+else
+    print_status "Already in Virtual Trackpad project directory"
 fi
-
-# Verify we're now in the correct directory
-if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
-    print_error "Failed to locate Virtual Trackpad project files"
-    print_error "Please run this script from the Virtual Trackpad directory"
-    exit 1
-fi
-
-print_status "Successfully located Virtual Trackpad project directory"
 
 print_step "Step 1: Checking system requirements"
 
