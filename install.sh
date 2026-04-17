@@ -159,8 +159,14 @@ cd working_build
 print_status "Copying source files..."
 cp ../CMakeLists.txt .
 cp ../main.cpp .
-cp ../uinput_cursor_controller.* . 2>/dev/null || cp ../simple_cursor_controller.* . 2>/dev/null || echo "Using existing cursor controller files"
+cp ../cursor_controller.* . 2>/dev/null || cp ../simple_cursor_controller.* . 2>/dev/null || echo "Using existing cursor controller files"
 cp ../virtual_trackpad_app.qml .
+
+# Verify files were copied
+if [ ! -f "cursor_controller.cpp" ] && [ ! -f "simple_cursor_controller.cpp" ]; then
+    print_error "Failed to copy cursor controller files"
+    exit 1
+fi
 
 print_status "Configuring build system..."
 cmake .
