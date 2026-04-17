@@ -209,6 +209,9 @@ qdbus6 org.kde.KWin /KWin reconfigure
 
 print_step "Step 6: Creating desktop entry"
 
+# Set project directory variable
+PROJECT_DIR=$(pwd)
+
 # Create launcher script
 LAUNCHER_SCRIPT="$PROJECT_DIR/working_build/launch_virtual_trackpad.sh"
 cat > "$LAUNCHER_SCRIPT" << 'EOF'
