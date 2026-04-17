@@ -212,15 +212,25 @@ print_step "Step 6: Creating desktop entry"
 # Set project directory variable
 PROJECT_DIR=$(pwd)
 
+# Create launcher script
+LAUNCHER_SCRIPT="$PROJECT_DIR/working_build/launch_virtual_trackpad.sh"
+cat > "$LAUNCHER_SCRIPT" << EOF
+#!/bin/bash
+cd "$(dirname "$0")"
+./VirtualTrackpad
+EOF
+
+chmod +x "$LAUNCHER_SCRIPT"
+
 # Create a desktop entry for easy launching
 DESKTOP_FILE="$HOME/.local/share/applications/virtual-trackpad.desktop"
 cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Name=Virtual Trackpad
 Comment=A KDE Plasma virtual trackpad widget with real cursor control on Wayland
-Exec=$PROJECT_DIR/working_build/VirtualTrackpad
+Exec=$LAUNCHER_SCRIPT
 Icon=input-touchpad
-Terminal=false
+Terminal=true
 Type=Application
 Categories=Utility;System;
 StartupWMClass=virtual-trackpad
