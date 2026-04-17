@@ -42,9 +42,8 @@ fi
 # Auto-detect and navigate to project directory
 print_status "Current directory: $(pwd)"
 print_status "Looking for CMakeLists.txt: $(test -f CMakeLists.txt && echo "FOUND" || echo "NOT FOUND")"
-print_status "Looking for working_build/: $(test -d working_build && echo "FOUND" || echo "NOT FOUND")"
 
-if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
+if [ ! -f "CMakeLists.txt" ]; then
     print_status "Not in project directory, searching for Virtual Trackpad..."
     
     # Check if we're in the cloned repo directory
@@ -66,7 +65,7 @@ if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
     fi
     
     # Verify we're now in the correct directory
-    if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
+    if [ ! -f "CMakeLists.txt" ]; then
         print_error "Failed to locate Virtual Trackpad project files"
         print_error "Please run this script from the Virtual Trackpad directory"
         exit 1
@@ -75,6 +74,12 @@ if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
     print_status "Successfully located Virtual Trackpad project directory"
 else
     print_status "Already in Virtual Trackpad project directory"
+fi
+
+# Create working_build directory if it doesn't exist
+if [ ! -d "working_build" ]; then
+    print_status "Creating working_build directory..."
+    mkdir -p working_build
 fi
 
 print_step "Step 1: Checking system requirements"
@@ -149,6 +154,13 @@ fi
 print_step "Step 4: Building the Virtual Trackpad"
 
 cd working_build
+
+# Copy necessary source files to working_build
+print_status "Copying source files..."
+cp ../CMakeLists.txt .
+cp ../main.cpp .
+cp ../uinput_cursor_controller.* . 2>/dev/null || cp ../simple_cursor_controller.* . 2>/dev/null || echo "Using existing cursor controller files"
+cp ../virtual_trackpad_app.qml .
 
 print_status "Configuring build system..."
 cmake .
