@@ -8,12 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 set(SOURCES
-    uinput_cursor_controller.cpp
+    cursor_controller.cpp
     main.cpp
 )
 
 set(HEADERS
-    uinput_cursor_controller.h
+    cursor_controller.h
 )
 
 add_executable(VirtualTrackpad
