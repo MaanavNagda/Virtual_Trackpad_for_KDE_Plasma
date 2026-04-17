@@ -1,7 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include "cursor_controller.h"
+#include "uinput_cursor_controller.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     
     // Register the cursor controller for use in QML
-    CursorController cursorController;
+    UInputCursorController cursorController;
     engine.rootContext()->setContextProperty("cursorController", &cursorController);
     
     const QUrl url(QStringLiteral("virtual_trackpad_app.qml"));

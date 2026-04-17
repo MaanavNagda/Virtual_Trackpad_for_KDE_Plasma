@@ -10,12 +10,12 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 qt6_standard_project_setup()
 
 set(SOURCES
-    cursor_controller.cpp
+    uinput_cursor_controller.cpp
     main.cpp
 )
 
 set(HEADERS
-    cursor_controller.h
+    uinput_cursor_controller.h
 )
 
 add_executable(VirtualTrackpad
