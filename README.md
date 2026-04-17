@@ -25,7 +25,28 @@ A KDE Plasma virtual trackpad widget that provides real cursor control on Waylan
 
 ## Installation
 
-### Prerequisites
+### Automated Installation (Recommended)
+
+The Virtual Trackpad includes an automated installation script that handles everything:
+
+```bash
+# Clone and install
+git clone https://github.com/KrivYaejerit/Virtual_Trackpad_for_KDE_Plasma.git
+cd Virtual_Trackpad_for_KDE_Plasma
+./install.sh
+```
+
+The installation script will:
+- Check and install required dependencies
+- Setup uinput device permissions
+- Build the application
+- Configure KWin rules for always-on-top behavior
+- Create desktop entry for app menu launch
+- Generate uninstall script
+
+### Manual Installation
+
+If you prefer manual installation:
 
 1. **Add user to input group:**
    ```bash
@@ -33,50 +54,68 @@ A KDE Plasma virtual trackpad widget that provides real cursor control on Waylan
    # Log out and log back in for changes to take effect
    ```
 
-2. **Setup uinput permissions:**
+2. **Clone the repository:**
    ```bash
-   sudo chmod 660 /dev/uinput && sudo chown root:input /dev/uinput
+   git clone https://github.com/KrivYaejerit/Virtual_Trackpad_for_KDE_Plasma.git
+   cd Virtual_Trackpad_for_KDE_Plasma
    ```
 
-### Build from Source
+3. **Build the application:**
+   ```bash
+   cd working_build
+   cmake ..
+   make
+   ```
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/virtual-trackpad.git
-cd virtual-trackpad
-
-# Build the application
-cd working_build
-cmake ..
-make
-
-# Setup KWin rules for always-on-top behavior
-chmod +x ../setup_kwin_rules.sh
-../setup_kwin_rules.sh
-
-# Run the Virtual Trackpad
-./VirtualTrackpadApp
-```
+4. **Setup KWin rules for always-on-top behavior:**
+   ```bash
+   qdbus6 org.kde.KWin /KWin reconfigure
+   ```
 
 ## Usage
 
-### Basic Usage
+### Launch Options
 
-1. **Launch the application:**
+1. **From Application Menu:**
+   - Search for "Virtual Trackpad" in your application launcher
+   - Launches with terminal window (required for proper environment)
+
+2. **From Terminal:**
    ```bash
-   cd working_build
-   ./VirtualTrackpadApp
+   cd ~/Virtual_Trackpad_for_KDE_Plasma/working_build
+   ./VirtualTrackpad
    ```
 
-2. **Use the trackpad:**
+### Using the Trackpad
+
+1. **Basic Controls:**
    - **Drag in the touch area** to move your cursor
    - **Click L, M, R buttons** for mouse clicks
    - **Drag the title bar** to reposition the window
 
-3. **The trackpad will:**
-   - Stay above all other applications automatically
-   - Not steal focus from other windows
-   - Provide smooth cursor control
+2. **Window Management:**
+   - Right-click on the window
+   - Select "More Actions" > "Keep Above Others" for persistent behavior
+
+3. **Features:**
+   - Optimized cursor sensitivity (30% of original)
+   - Stays above all applications automatically
+   - Doesn't steal focus from other windows
+   - Works perfectly on Wayland
+
+### Uninstallation
+
+To completely remove the Virtual Trackpad:
+
+```bash
+cd ~/Virtual_Trackpad_for_KDE_Plasma
+./remove_virtual_trackpad.sh
+```
+
+This will remove:
+- Desktop entry from application menu
+- KWin rules
+- All project files and directories
 
 ### Advanced Configuration
 
@@ -113,17 +152,19 @@ To remove the rules:
 ### File Structure
 
 ```
-virtual-trackpad/
+Virtual_Trackpad_for_KDE_Plasma/
 |-- working_build/                 # Build directory
-|   |-- VirtualTrackpadApp         # Executable
+|   |-- VirtualTrackpad            # Executable
+|   |-- launch_virtual_trackpad.sh # Launcher script
 |   |-- CMakeLists.txt             # Build configuration
 |   |-- main.cpp                   # Application entry point
 |   |-- uinput_cursor_controller.* # Cursor control backend
 |   `-- virtual_trackpad_app.qml  # QML user interface
-|-- setup_kwin_rules.sh           # KWin rules installation
-|-- remove_kwin_rules.sh          # KWin rules removal
-|-- package/                      # Plasma widget files (optional)
-`-- README.md                     # This file
+|-- install.sh                    # Automated installation script
+|-- remove_virtual_trackpad.sh    # Uninstallation script
+|-- CMakeLists.txt                # Main build configuration
+|-- README.md                      # This file
+`-- LICENSE                       # Apache 2.0 License
 ```
 
 ## Troubleshooting
@@ -137,19 +178,26 @@ virtual-trackpad/
 
 **"Cursor doesn't move"**
 - Verify uinput device is accessible
-- Check if ydotoold service is interfering
-- Run with `strace` to debug system calls
+- Check if user is in input group: `groups $USER`
+- Restart session after adding to input group
+- Test with terminal launch first
 
 **"Window gets hidden behind other apps"**
-- Run the KWin rules setup script
-- Verify rules in System Settings > Window Management > Window Rules
+- Right-click window > "More Actions" > "Keep Above Others"
+- Verify KWin rules are configured
 - Restart KWin: `qdbus6 org.kde.KWin /KWin reconfigure`
+
+**"App menu launch fails"**
+- Terminal window is required for proper environment
+- Try launching from terminal first to test functionality
+- Check desktop entry: `~/.local/share/applications/virtual-trackpad.desktop`
 
 ### Debug Mode
 
 For debugging, run with verbose output:
 ```bash
-./VirtualTrackpadApp 2>&1 | grep -E "(UInput|Moved cursor|Left click)"
+cd ~/Virtual_Trackpad_for_KDE_Plasma/working_build
+./VirtualTrackpad 2>&1 | grep -E "(UInput|Moved cursor|Left click)"
 ```
 
 ## Development
@@ -193,18 +241,23 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Changelog
 
-### v1.0.0 (2024-04-17)
+### v1.0.0 (2025-04-17)
 - Initial release
-- uinput-based cursor control
+- uinput-based cursor control for Wayland
+- Automated installation script with dependency checking
+- Optimized cursor sensitivity (30% of original)
 - KWin rules for always-on-top behavior
 - Touch-sensitive trackpad interface
-- Mouse click functionality
-- Wayland compatibility
+- Mouse click functionality (L, M, R)
+- Focus-friendly window management
+- Complete uninstallation script
+- App menu integration with terminal launcher
+- Universal path compatibility for any user
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/virtual-trackpad/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/virtual-trackpad/discussions)
+- **Issues:** [GitHub Issues](https://github.com/KrivYaejerit/Virtual_Trackpad_for_KDE_Plasma/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/KrivYaejerit/Virtual_Trackpad_for_KDE_Plasma/discussions)
 
 ---
 
