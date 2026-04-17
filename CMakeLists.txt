@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt6_standard_project_setup()
+
 set(SOURCES
     cursor_controller.cpp
     main.cpp
