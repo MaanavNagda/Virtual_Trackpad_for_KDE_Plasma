@@ -1,86 +1,233 @@
 #!/bin/bash
 
-# Virtual Trackpad Installation Script
-# This script sets up the Virtual Trackpad application with proper permissions
+# Virtual Trackpad Automated Installation Script
+# This script completely sets up the Virtual Trackpad for KDE Plasma Wayland
 
 set -e
 
-echo "Virtual Trackpad Installation Script"
-echo "=================================="
+echo "Virtual Trackpad Automated Installation"
+echo "===================================="
 
-# Check if running as root for sudo setup
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_step() {
+    echo -e "${BLUE}[STEP]${NC} $1"
+}
+
+# Check if running with appropriate permissions
 if [ "$EUID" -eq 0 ]; then
-    echo "This script should be run as a regular user, not as root."
-    echo "It will prompt for sudo password when needed."
+    print_error "This script should not be run as root"
+    print_error "Run it as a regular user - it will ask for sudo when needed"
     exit 1
 fi
 
-# Get the current username
-USER=$(whoami)
-
-echo "Setting up Virtual Trackpad for user: $USER"
-
-# Install ydotool if not already installed
-echo "Checking for ydotool..."
-if ! command -v ydotool &> /dev/null; then
-    echo "Installing ydotool..."
-    sudo zypper install -y ydotool
-else
-    echo "ydotool is already installed"
-fi
-
-# Setup passwordless sudo for ydotool
-echo "Setting up passwordless sudo for ydotool..."
-echo "SkylarStone ALL=(ALL) NOPASSWD: /usr/bin/ydotool" | sudo tee /etc/sudoers.d/ydotool
-
-# Verify the sudoers file was created correctly
-if sudo test -f /etc/sudoers.d/ydotool; then
-    echo "Passwordless sudo configuration created successfully"
-else
-    echo "Failed to create sudoers configuration"
+# Check if we're in the correct directory
+if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
+    print_error "Please run this script from the Virtual Trackpad root directory"
     exit 1
 fi
 
-# Start ydotoold service
-echo "Starting ydotoold service..."
-sudo systemctl enable --now ydotoold
+print_step "Step 1: Checking system requirements"
 
-# Wait a moment for the service to start
-sleep 2
-
-# Check if ydotoold is running
-if pgrep -f ydotoold > /dev/null; then
-    echo "ydotoold service is running"
-else
-    echo "Warning: ydotoold service may not be running properly"
+# Check if running on KDE Plasma
+if [ -z "$KDE_SESSION_VERSION" ]; then
+    print_warning "This script is optimized for KDE Plasma"
+    print_warning "Other desktop environments may require manual adjustments"
 fi
 
-# Test ydotool
-echo "Testing ydotool functionality..."
-if sudo ydotool mousemove_relative -- 1 1; then
-    echo "ydotool test successful"
-else
-    echo "ydotool test failed"
+# Check for required packages
+print_status "Checking for required packages..."
+
+MISSING_PACKAGES=""
+
+# Check for cmake
+if ! command -v cmake &> /dev/null; then
+    MISSING_PACKAGES="$MISSING_PACKAGES cmake"
 fi
 
-# Build the application
-echo "Building Virtual Trackpad application..."
-cd "$(dirname "$0")/working_build"
+# Check for Qt6 development packages
+if ! pkg-config --exists Qt6Core 2>/dev/null; then
+    MISSING_PACKAGES="$MISSING_PACKAGES qt6-base-devel"
+fi
+
+if ! pkg-config --exists Qt6Qml 2>/dev/null; then
+    MISSING_PACKAGES="$MISSING_PACKAGES qt6-declarative-devel"
+fi
+
+if [ -n "$MISSING_PACKAGES" ]; then
+    print_error "Missing required packages: $MISSING_PACKAGES"
+    echo ""
+    echo "For openSUSE, run:"
+    echo "  sudo zypper install $MISSING_PACKAGES"
+    echo ""
+    echo "For Ubuntu/Debian, run:"
+    echo "  sudo apt install $MISSING_PACKAGES"
+    echo ""
+    echo "For Fedora, run:"
+    echo "  sudo dnf install $MISSING_PACKAGES"
+    exit 1
+fi
+
+print_step "Step 2: Setting up user permissions"
+
+# Check if user is in input group
+if groups $USER | grep -q "input"; then
+    print_status "User is already in input group"
+else
+    print_status "Adding user to input group..."
+    sudo usermod -a -G input $USER
+    print_warning "You will need to log out and log back in for group changes to take effect"
+    print_warning "After logging back in, run this script again"
+    exit 0
+fi
+
+print_step "Step 3: Setting up uinput device permissions"
+
+# Setup uinput permissions
+print_status "Setting up uinput device permissions..."
+
+if [ -e "/dev/uinput" ]; then
+    sudo chmod 660 /dev/uinput
+    sudo chown root:input /dev/uinput
+    print_status "uinput device permissions set"
+else
+    print_warning "uinput device not found - will be created on reboot"
+    print_warning "If permissions don't work after reboot, run:"
+    echo "  sudo chmod 660 /dev/uinput && sudo chown root:input /dev/uinput"
+fi
+
+print_step "Step 4: Building the Virtual Trackpad"
+
+cd working_build
+
+print_status "Configuring build system..."
+cmake .
+
+print_status "Compiling Virtual Trackpad..."
 make
 
-if [ $? -eq 0 ]; then
-    echo "Build successful!"
-    echo ""
-    echo "Installation complete!"
-    echo "To run the Virtual Trackpad:"
-    echo "  cd $(pwd)"
-    echo "  ./VirtualTrackpadApp"
-    echo ""
-    echo "The Virtual Trackpad will appear as a floating window where you can:"
-    echo "- Drag in the touch area to move your cursor"
-    echo "- Click L, M, R buttons for left, middle, right clicks"
-    echo "- Drag the title bar to reposition the window"
+if [ -f "VirtualTrackpadApp" ]; then
+    print_status "Build successful!"
 else
-    echo "Build failed"
+    print_error "Build failed - please check the error messages above"
     exit 1
 fi
+
+cd ..
+
+print_step "Step 5: Setting up KWin rules for always-on-top behavior"
+
+print_status "Installing KWin rules..."
+
+# Generate a unique ID for this rule
+RULE_ID="virtual-trackpad-keep-above"
+
+# Set the window matching (Match by Desktop File Name)
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key description "Virtual Trackpad - Keep Above"
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key desktopfile "virtual-trackpad"
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key desktopfilerule 1
+
+# Set "Keep Above" to True and "Force" it (rule=2 means Force)
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key above true
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key aboverule 2
+
+# Also set focus stealing prevention (optional but recommended)
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key focusstealingprevention true
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key focusstealingpreventionrule 2
+
+# Tell KWin to reload the configuration immediately
+print_status "Reloading KWin configuration..."
+qdbus6 org.kde.KWin /KWin reconfigure
+
+print_step "Step 6: Creating desktop entry"
+
+# Create a desktop entry for easy launching
+DESKTOP_FILE="$HOME/.local/share/applications/virtual-trackpad.desktop"
+cat > "$DESKTOP_FILE" << EOF
+[Desktop Entry]
+Name=Virtual Trackpad
+Comment=A KDE Plasma virtual trackpad widget with real cursor control on Wayland
+Exec=$(pwd)/working_build/VirtualTrackpadApp
+Icon=input-touchpad
+Terminal=false
+Type=Application
+Categories=Utility;System;
+StartupWMClass=virtual-trackpad
+EOF
+
+chmod +x "$DESKTOP_FILE"
+print_status "Desktop entry created"
+
+print_step "Step 7: Creating uninstall script"
+
+# Create a removal script for cleanup
+cat > remove_virtual_trackpad.sh << 'EOF'
+#!/bin/bash
+
+# Virtual Trackpad Removal Script
+
+RULE_ID="virtual-trackpad-keep-above"
+
+echo "Removing Virtual Trackpad..."
+
+# Remove the rule group from kwinrulesrc
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key description --delete
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key desktopfile --delete
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key desktopfilerule --delete
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key above --delete
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key aboverule --delete
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key focusstealingprevention --delete
+kwriteconfig6 --file kwinrulesrc --group "$RULE_ID" --key focusstealingpreventionrule --delete
+
+# Reload KWin configuration
+qdbus6 org.kde.KWin /KWin reconfigure
+
+# Remove desktop entry
+rm -f "$HOME/.local/share/applications/virtual-trackpad.desktop"
+
+echo "Virtual Trackpad removed successfully."
+EOF
+
+chmod +x remove_virtual_trackpad.sh
+print_status "Uninstall script created: remove_virtual_trackpad.sh"
+
+print_step "Installation Complete!"
+
+echo ""
+echo -e "${GREEN}Virtual Trackpad has been successfully installed!${NC}"
+echo ""
+echo "To start the Virtual Trackpad:"
+echo "  1. Run: $(pwd)/working_build/VirtualTrackpadApp"
+echo "  2. Or launch from your application menu as 'Virtual Trackpad'"
+echo ""
+echo "Features:"
+echo "  - Real cursor control using uinput"
+echo "  - Touch-sensitive trackpad interface"
+echo "  - Mouse click buttons (L, M, R)"
+echo "  - Always stays above other applications"
+echo "  - Doesn't steal focus from other windows"
+echo ""
+echo "To uninstall, run: ./remove_virtual_trackpad.sh"
+echo ""
+echo -e "${YELLOW}Important:${NC} If you were just added to the input group,"
+echo "you may need to log out and log back in for cursor control to work."
+echo ""
+echo -e "${GREEN}Enjoy your Virtual Trackpad!${NC}"
