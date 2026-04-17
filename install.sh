@@ -212,27 +212,6 @@ print_step "Step 6: Creating desktop entry"
 # Set project directory variable
 PROJECT_DIR=$(pwd)
 
-# Create launcher script
-LAUNCHER_SCRIPT="$PROJECT_DIR/working_build/launch_virtual_trackpad.sh"
-cat > "$LAUNCHER_SCRIPT" << EOF
-#!/bin/bash
-cd "$(dirname "$0")"
-echo "Starting Virtual Trackpad..."
-echo "Current directory: $(pwd)"
-echo "Executable: $(pwd)/VirtualTrackpad"
-if [ -f "./VirtualTrackpad" ]; then
-    echo "Executable found, launching..."
-    ./VirtualTrackpad
-else
-    echo "Error: VirtualTrackpad executable not found!"
-    echo "Files in directory:"
-    ls -la
-    read -p "Press Enter to exit..."
-fi
-EOF
-
-chmod +x "$LAUNCHER_SCRIPT"
-
 # Create a desktop entry for easy launching
 DESKTOP_FILE="$HOME/.local/share/applications/virtual-trackpad.desktop"
 cat > "$DESKTOP_FILE" << EOF
