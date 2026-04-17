@@ -209,14 +209,23 @@ qdbus6 org.kde.KWin /KWin reconfigure
 
 print_step "Step 6: Creating desktop entry"
 
+# Create launcher script
+LAUNCHER_SCRIPT="$PROJECT_DIR/working_build/launch_virtual_trackpad.sh"
+cat > "$LAUNCHER_SCRIPT" << 'EOF'
+#!/bin/bash
+cd "$(dirname "$0")"
+./VirtualTrackpad
+EOF
+
+chmod +x "$LAUNCHER_SCRIPT"
+
 # Create a desktop entry for easy launching
 DESKTOP_FILE="$HOME/.local/share/applications/virtual-trackpad.desktop"
-PROJECT_DIR=$(pwd)
 cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Name=Virtual Trackpad
 Comment=A KDE Plasma virtual trackpad widget with real cursor control on Wayland
-Exec=cd $PROJECT_DIR/working_build && ./VirtualTrackpad
+Exec=$LAUNCHER_SCRIPT
 Icon=input-touchpad
 Terminal=false
 Type=Application
