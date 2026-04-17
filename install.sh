@@ -214,10 +214,21 @@ PROJECT_DIR=$(pwd)
 
 # Create launcher script
 LAUNCHER_SCRIPT="$PROJECT_DIR/working_build/launch_virtual_trackpad.sh"
-cat > "$LAUNCHER_SCRIPT" << 'EOF'
+cat > "$LAUNCHER_SCRIPT" << EOF
 #!/bin/bash
 cd "$(dirname "$0")"
-./VirtualTrackpad
+echo "Starting Virtual Trackpad..."
+echo "Current directory: $(pwd)"
+echo "Executable: $(pwd)/VirtualTrackpad"
+if [ -f "./VirtualTrackpad" ]; then
+    echo "Executable found, launching..."
+    ./VirtualTrackpad
+else
+    echo "Error: VirtualTrackpad executable not found!"
+    echo "Files in directory:"
+    ls -la
+    read -p "Press Enter to exit..."
+fi
 EOF
 
 chmod +x "$LAUNCHER_SCRIPT"
@@ -234,6 +245,7 @@ Terminal=true
 Type=Application
 Categories=Utility;System;
 StartupWMClass=virtual-trackpad
+Path=$PROJECT_DIR/working_build
 EOF
 
 chmod +x "$DESKTOP_FILE"

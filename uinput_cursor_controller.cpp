@@ -5,7 +5,7 @@
 
 UInputCursorController::UInputCursorController(QObject *parent)
     : QObject(parent)
-    , m_sensitivity(0.3)
+    , m_sensitivity(0.6)
     , m_velocityX(0.0)
     , m_velocityY(0.0)
     , m_uinputFd(-1)
