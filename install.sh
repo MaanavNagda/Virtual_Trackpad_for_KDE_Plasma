@@ -40,6 +40,10 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # Auto-detect and navigate to project directory
+print_status "Current directory: $(pwd)"
+print_status "Looking for CMakeLists.txt: $(test -f CMakeLists.txt && echo "FOUND" || echo "NOT FOUND")"
+print_status "Looking for working_build/: $(test -d working_build && echo "FOUND" || echo "NOT FOUND")"
+
 if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
     print_status "Not in project directory, searching for Virtual Trackpad..."
     
