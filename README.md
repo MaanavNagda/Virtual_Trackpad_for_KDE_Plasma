@@ -4,7 +4,7 @@ A KDE Plasma virtual trackpad widget that provides real cursor control on Waylan
 
 ![Virtual Trackpad](https://img.shields.io/badge/Platform-KDE%20Plasma%206-blue)
 ![Qt](https://img.shields.io/badge/Framework-Qt6-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue)
 
 ## Features
 
@@ -183,7 +183,7 @@ make
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
