@@ -239,7 +239,7 @@ cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Name=Virtual Trackpad
 Comment=A KDE Plasma virtual trackpad widget with real cursor control on Wayland
-Exec=sh -c "cd $PROJECT_DIR/working_build && ./VirtualTrackpad"
+Exec=$PROJECT_DIR/working_build/VirtualTrackpad
 Icon=input-touchpad
 Terminal=false
 Type=Application
