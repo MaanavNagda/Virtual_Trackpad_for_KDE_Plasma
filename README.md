@@ -1,3 +1,15 @@
+
+
+https://github.com/user-attachments/assets/89e15b50-12c5-44f2-b900-a96ce98ba7f8
+
+
+
+
+
+
+
+
+
 # Virtual Trackpad
 
 A KDE Plasma virtual trackpad widget that provides real cursor control on Wayland systems using uinput.
