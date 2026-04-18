@@ -141,14 +141,37 @@ print_step "Step 3: Setting up uinput device permissions"
 # Setup uinput permissions
 print_status "Setting up uinput device permissions..."
 
+# Create udev rule for persistent uinput permissions
+UDEV_RULE="/etc/udev/rules.d/99-uinput.rules"
+print_status "Creating udev rule for persistent permissions..."
+
+echo 'KERNEL=="uinput", MODE="0660", GROUP="input", OPTIONS+="static_node=uinput"' | sudo tee $UDEV_RULE > /dev/null
+
+if [ $? -eq 0 ]; then
+    print_status "udev rule created successfully"
+    print_status "Permissions will persist after system restart"
+else
+    print_warning "Failed to create udev rule"
+    print_warning "You may need to manually set permissions after restart"
+fi
+
+# Set current permissions
 if [ -e "/dev/uinput" ]; then
     sudo chmod 660 /dev/uinput
     sudo chown root:input /dev/uinput
-    print_status "uinput device permissions set"
+    print_status "Current uinput device permissions set"
 else
-    print_warning "uinput device not found - will be created on reboot"
-    print_warning "If permissions don't work after reboot, run:"
-    echo "  sudo chmod 660 /dev/uinput && sudo chown root:input /dev/uinput"
+    print_status "Triggering uinput device creation..."
+    sudo udevadm trigger --subsystem-match=input
+    sudo udevadm control --reload-rules
+    if [ -e "/dev/uinput" ]; then
+        sudo chmod 660 /dev/uinput
+        sudo chown root:input /dev/uinput
+        print_status "uinput device created and permissions set"
+    else
+        print_warning "uinput device not found - will be created on reboot"
+        print_warning "udev rule will ensure permissions are set automatically"
+    fi
 fi
 
 print_step "Step 4: Building the Virtual Trackpad"
@@ -261,6 +284,13 @@ if [ -f "$HOME/.config/kwinrulesrc" ]; then
     kwriteconfig6 --file kwinrulesrc --group "virtual-trackpad-keep-above" --key delete true
     qdbus6 org.kde.KWin /KWin reconfigure
     echo "KWin rules removed."
+fi
+
+# Remove udev rule
+echo "Removing udev rule..."
+if [ -f "/etc/udev/rules.d/99-uinput.rules" ]; then
+    sudo rm -f "/etc/udev/rules.d/99-uinput.rules"
+    echo "udev rule removed."
 fi
 
 # Get the current directory to delete it
