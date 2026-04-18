@@ -312,6 +312,84 @@ EOF
 chmod +x remove_virtual_trackpad.sh
 print_status "Uninstall script created: remove_virtual_trackpad.sh"
 
+print_step "Step 8: Creating update script"
+
+# Create an update script for existing installations
+cat > update_virtual_trackpad.sh << 'EOF'
+#!/bin/bash
+
+echo "Virtual Trackpad Update"
+echo "===================="
+
+# Check if we're in the correct directory
+if [ ! -f "CMakeLists.txt" ] || [ ! -d "working_build" ]; then
+    echo "Error: Please run this script from the Virtual Trackpad directory"
+    echo "Usage: cd ~/Virtual_Trackpad_for_KDE_Plasma && ./update_virtual_trackpad.sh"
+    exit 1
+fi
+
+# Backup current executable if it exists
+if [ -f "working_build/VirtualTrackpad" ]; then
+    cp working_build/VirtualTrackpad working_build/VirtualTrackpad.backup
+    echo "Current executable backed up"
+fi
+
+# Pull latest changes
+echo "Checking for updates..."
+git fetch origin
+CURRENT_COMMIT=$(git rev-parse HEAD)
+LATEST_COMMIT=$(git rev-parse origin/main)
+
+if [ "$CURRENT_COMMIT" = "$LATEST_COMMIT" ]; then
+    echo "Already up to date!"
+    exit 0
+fi
+
+echo "Updating to latest version..."
+git pull origin main
+
+# Rebuild the application
+cd working_build
+echo "Rebuilding Virtual Trackpad..."
+cmake .
+make
+
+# Update launcher script and desktop entry
+PROJECT_DIR=$(pwd)/..
+LAUNCHER_SCRIPT="$PROJECT_DIR/working_build/launch_virtual_trackpad.sh"
+cat > "$LAUNCHER_SCRIPT" << EOFLAUNCH
+#!/bin/bash
+cd "$(dirname "$0")"
+./VirtualTrackpad
+EOFLAUNCH
+chmod +x "$LAUNCHER_SCRIPT"
+
+# Update desktop entry
+DESKTOP_FILE="$HOME/.local/share/applications/virtual-trackpad.desktop"
+cat > "$DESKTOP_FILE" << EOFDESKTOP
+[Desktop Entry]
+Name=Virtual Trackpad
+Comment=A KDE Plasma virtual trackpad widget with real cursor control on Wayland
+Exec=$LAUNCHER_SCRIPT
+Icon=input-touchpad
+Terminal=true
+Type=Application
+Categories=Utility;System;
+StartupWMClass=virtual-trackpad
+EOFDESKTOP
+chmod +x "$DESKTOP_FILE"
+
+echo ""
+echo "Virtual Trackpad updated successfully!"
+echo "Changes in this update:"
+git log --oneline $CURRENT_COMMIT..$LATEST_COMMIT
+echo ""
+echo "You can now launch the updated version from your application menu."
+EOF
+
+chmod +x update_virtual_trackpad.sh
+print_status "Update script created: update_virtual_trackpad.sh"
+
 print_step "Installation Complete!"
 
 echo ""
@@ -322,6 +400,11 @@ echo "  1. Run: cd ~/Virtual_Trackpad_for_KDE_Plasma/working_build && ./VirtualT
 echo "  2. Or launch from your application menu as 'Virtual Trackpad'"
 echo "  3. To keep above other windows: right-click on the window, select 'More Actions', then 'Keep Above Others'"
 echo ""
+echo "To update to latest version:"
+echo "  cd ~/Virtual_Trackpad_for_KDE_Plasma && ./update_virtual_trackpad.sh"
+echo ""
+echo "To uninstall, run: cd ~/Virtual_Trackpad_for_KDE_Plasma && ./remove_virtual_trackpad.sh"
+echo ""
 echo "Features:"
 echo "  - Real cursor control using uinput"
 echo "  - Touch-sensitive trackpad interface"
@@ -329,7 +412,6 @@ echo "  - Mouse click buttons (L, M, R)"
 echo "  - Always stays above other applications"
 echo "  - Doesn't steal focus from other windows"
 echo ""
-echo "To uninstall, run: cd ~/Virtual_Trackpad_for_KDE_Plasma && ./remove_virtual_trackpad.sh"
 echo ""
 echo -e "${YELLOW}Important:${NC} If you were just added to the input group,"
 echo "you may need to log out and log back in for cursor control to work."
